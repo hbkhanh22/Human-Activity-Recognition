@@ -43,9 +43,14 @@ The dataset consists of time-series sensor readings collected from accelerometer
 
 ## Contributors
 - **[Hoàng Bảo Khanh]** - [github/hbkhanh22]
+- **[Đinh Nguyễn Gia Bảo]** - [github/BAoD1nH]
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Build program
+```bash
+python <path-to-main.py> <type-of-dataset> <dataset-path>
 
 ---
 Feel free to contribute to this project by submitting issues or pull requests!
