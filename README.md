@@ -51,8 +51,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Build program
 ```bash
 python <path-to-main.py> <type-of-dataset> <dataset-path>
+```
 
----
-Feel free to contribute to this project by submitting issues or pull requests!
 
 
