@@ -43,7 +43,7 @@ def modelEvaluation(y_pred, y_pred_proba, y_test, labels, dataset):
 
     # Draw confusion matrix
     plt.figure(figsize=(12, 10))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='viridis', xticklabels=labels, yticklabels=labels)
+    sns.heatmap(cm, annot=False, fmt='d', cmap='viridis', xticklabels=labels, yticklabels=labels)
     plt.title(f"Confusion Matrix", pad=20)  # Adjust title position
     plt.xlabel("Predicted", labelpad=15)  # Adjust x-axis label position
     plt.ylabel("Actual", labelpad=15)  # Adjust y-axis label position
