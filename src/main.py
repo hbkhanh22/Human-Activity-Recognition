@@ -12,9 +12,12 @@ def main(dataset, data_dir):
     # Define the number of frames to extract features
     num_frames = 16
 
-    if dataset.lower() == 'ucf11' or dataset.lower() == 'ucf50' or dataset.lower() == 'ucf101':
+    if dataset.lower() == 'ucf11':
         # Load the UCF11 dataset
-        samples = readUCF(data_dir, num_frames)
+        samples = read_UCF11(data_dir, num_frames)
+    elif dataset.lower() == 'ucf50' or dataset.lower() == 'ucf101':
+        # Load the UCF50 dataset
+        samples = read_UCF50(data_dir, num_frames)
     elif dataset.lower() == 'hmdb51':
         # Load the HMDB51 dataset
         samples = read_HMDB51(data_dir, num_frames)
@@ -23,7 +26,7 @@ def main(dataset, data_dir):
     processed_data = preprocessingData()
 
     # Extract features using ResNet50
-    processed_samples = extract_features(samples, processed_data)
+    processed_samples = extract_features(samples, processed_data, dataset.lower())
 
     # Split the data into training, validation, and testing sets
     le = splittingData(processed_samples, dataset.lower())
@@ -35,7 +38,7 @@ def main(dataset, data_dir):
     model = trainModel(train_features, train_labels, val_features, val_labels, dataset.lower())
 
     # Test the model
-    y_pred, y_pred_proba = testModel(model, test_features, test_labels, num_frames)
+    y_pred, y_pred_proba = testModel(model, test_features, test_labels, dataset.lower(), num_frames)
 
     # Evaluate the model
     labels = np.arange(0, len(np.unique(test_labels)), 1)
