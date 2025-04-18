@@ -1,14 +1,14 @@
 import torch
-from lstm import YourLSTMModel  # đổi tên đúng model bạn dùng
+from lstm import MultiLayerBiLSTMClassifier
 from feature_extraction import extract_features  # dùng để tạo đầu vào từ file
 import numpy as np
 
-# Load model đã huấn luyện
-def load_model(model_path="models/lstm_model.pt"):
-	model = YourLSTMModel(...)
+def load_model(model_path="models/ucf11_lstm_model.pt"):
+	model = MultiLayerBiLSTMClassifier(input_size=2048, hidden_size=256, num_layers=2, num_classes=11)
 	model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
 	model.eval()
 	return model
+
 
 # Dự đoán từ file input
 def predict_activity(input_path, model):
