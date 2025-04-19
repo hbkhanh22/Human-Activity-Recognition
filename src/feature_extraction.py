@@ -4,6 +4,7 @@ import torch
 import os
 import cv2
 from torchvision import models
+from torchvision.models import resnet50, ResNet50_Weights
 import time
 
 def extract_features(samples, transform):
@@ -78,3 +79,44 @@ def splittingData(samples, dataset):
 
     # Save the LabelEncoder for later use
     return le
+
+def extract_features_from_single_video(video_path, transform, num_frames=16):
+	print("Extracting features using ResNet50...")
+
+	# Thiết bị
+	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+	# Load ResNet50 với pretrained=True để giống lúc training
+	weights = ResNet50_Weights.IMAGENET1K_V1  # tương đương pretrained=True
+	resnet = models.resnet50(weights=weights)
+	resnet = torch.nn.Sequential(*list(resnet.children())[:-1])  # bỏ FC cuối
+	resnet = resnet.to(device)
+	resnet.eval()
+
+	# Đọc video
+	cap = cv2.VideoCapture(video_path)
+	total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+	frame_idxs = np.linspace(0, total_frames - 1, num_frames).astype(int)
+
+	features = []
+	frame_id = 0
+	success = True
+
+	while success and len(features) < num_frames:
+		success, frame = cap.read()
+		if not success:
+			break
+		if frame_id in frame_idxs:
+			img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR → RGB
+			img = transform(img).unsqueeze(0).to(device)  # Apply transform & add batch dim
+			with torch.no_grad():
+				feat = resnet(img).reshape(-1).cpu().numpy()  # [2048]
+			features.append(feat)
+		frame_id += 1
+
+	cap.release()
+
+	if len(features) < num_frames:
+		raise ValueError(f"Không đủ frame để trích đặc trưng: chỉ có {len(features)} / {num_frames}")
+
+	return np.stack(features, axis=0)  # [num_frames, 2048]
