@@ -2,33 +2,41 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 import torch
 import os
-import cv2
 from torchvision import models
-from torchvision.models import resnet50, ResNet50_Weights
 import time
 
-def extract_features(samples, transform):
+
+def extract_features(samples, transform, dataset):
     print("Extracting features using ResNet50...")
     # Load the pre-trained ResNet50 model
     start_time = time.time()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     resnet = models.resnet50(weights=models.ResNet50_Weights.DEFAULT).to(device)
+    resnet.eval()
 
     # Remove the last layer of the ResNet50 model to obtain the feature extractor
     resnet_feat = torch.nn.Sequential(*list(resnet.children())[:-1])
-    resnet.eval()
+    resnet_feat.eval()
 
     processed_samples = []
     for frames, label in samples:
         transformed_frames = [transform(frame) for frame in frames]
-        frames_tensor = torch.stack(transformed_frames, dim=0).to(device)
+        frames_tensor = torch.stack(transformed_frames, dim=0).to(device) 
         with torch.no_grad():
-            features_tensor = resnet_feat(frames_tensor)
-        features = torch.flatten(features_tensor, start_dim=1).cpu().numpy()
+            features_tensor = resnet_feat(frames_tensor)  # Shape: (T, 2048, 1, 1)
+            features = torch.flatten(features_tensor, start_dim=1).cpu().numpy()
+        
         processed_samples.append((features, label))
 
     end_time = time.time()
     print(f"Feature extraction completed in {end_time - start_time:.2f} seconds")
+
+    os.makedirs(f'./benchmarks/{dataset}', exist_ok=True)
+
+    # Save the feature extraction time in file .txt
+    with open(f'./benchmarks/{dataset}/benchmark.txt', 'w') as f:
+        f.write(f"Feature extraction time: {end_time - start_time:.2f} seconds\n")
+
     return processed_samples
 
 def splittingData(samples, dataset):

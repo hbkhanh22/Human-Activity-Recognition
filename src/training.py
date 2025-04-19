@@ -37,7 +37,7 @@ def trainModel(train_features, train_labels, val_features, val_labels, dataset, 
     val_losses = []
     val_accuracies = []
 
-    patience = 15  # Early stopping patience
+    patience = 10  # Early stopping patience
     best_val_loss = float("inf")
     counter = 0
 
@@ -119,6 +119,10 @@ def trainModel(train_features, train_labels, val_features, val_labels, dataset, 
 
     end_time = time.time()
     print(f'Training completed in {end_time - start_time:.2f} seconds')
+
+    # Save the training time in file .txt
+    with open(f'./benchmarks/{dataset}/benchmark.txt', 'a') as f:
+        f.write(f"Training time: {end_time - start_time:.2f} seconds\n")
 
     os.makedirs(f'./benchmarks/{dataset}', exist_ok=True)
     # Plot training and testing losses and accuracies

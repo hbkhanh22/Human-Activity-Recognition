@@ -1,4 +1,4 @@
-from load_dataset import readUCF, read_HMDB51
+from load_dataset import read_UCF11, read_UCF50, read_UCF101
 from preprocessing import preprocessingData
 from feature_extraction import extract_features, splittingData
 from training import loadFeatures, trainModel
@@ -15,12 +15,12 @@ def main(dataset, data_dir):
     if dataset.lower() == 'ucf11':
         # Load the UCF11 dataset
         samples = read_UCF11(data_dir, num_frames)
-    elif dataset.lower() == 'ucf50' or dataset.lower() == 'ucf101':
+    elif dataset.lower() == 'ucf50':
         # Load the UCF50 dataset
         samples = read_UCF50(data_dir, num_frames)
-    elif dataset.lower() == 'hmdb51':
-        # Load the HMDB51 dataset
-        samples = read_HMDB51(data_dir, num_frames)
+    elif dataset.lower() == 'ucf101':
+        # Load the UCF101 dataset
+        samples = read_UCF101(data_dir, num_frames)
 
     # Preprocess the data
     processed_data = preprocessingData()

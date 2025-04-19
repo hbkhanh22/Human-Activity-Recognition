@@ -51,5 +51,9 @@ def testModel(model, test_features, test_labels, num_frames=32):
     # Print final testing results
     print(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%')
 
+    # Save the test results to file .txt
+    with open(f'./benchmarks/{dataset}/benchmark.txt', 'a') as f:
+        f.write(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%\n")
+
     return y_pred, y_pred_proba
 
