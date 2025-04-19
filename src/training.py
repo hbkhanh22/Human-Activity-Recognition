@@ -119,8 +119,7 @@ def trainModel(train_features, train_labels, val_features, val_labels, dataset, 
 
     end_time = time.time()
     print(f'Training completed in {end_time - start_time:.2f} seconds')
-    
-    
+
     os.makedirs(f'./benchmarks/{dataset}', exist_ok=True)
     # Plot training and testing losses and accuracies
     plt.figure(figsize=(10, 5))
@@ -141,5 +140,10 @@ def trainModel(train_features, train_labels, val_features, val_labels, dataset, 
     plt.legend()
     plt.savefig(f'./benchmarks/{dataset}/accuracy_plot.png')
     plt.close()
+
+    # 18/4/2025: Added to Save model weights
+    os.makedirs('./models', exist_ok=True)
+    torch.save(model.state_dict(), f'./models/{dataset}_lstm_model.pt')
+    print(f'Model saved to ./models/{dataset}_lstm_model.pt')
 
     return model

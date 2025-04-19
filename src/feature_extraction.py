@@ -4,6 +4,7 @@ import torch
 import os
 import cv2
 from torchvision import models
+from torchvision.models import resnet50, ResNet50_Weights
 import time
 
 def extract_features(samples, transform):
