@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 
 
-def testModel(model, test_features, test_labels, num_frames=32):
+def testModel(model, test_features, test_labels, dataset, num_frames=32):
     """
     "Test the LSTM model on the test set."
     """

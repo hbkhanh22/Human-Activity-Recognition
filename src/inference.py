@@ -5,15 +5,25 @@ from torchvision import models, transforms
 from torchvision.models import resnet50, ResNet50_Weights
 from lstm import MultiLayerBiLSTMClassifier
 from preprocessing import preprocessingData
-from feature_extraction import extract_features
 import argparse
 import os
+import json
+
+def load_label_map(dataset):
+	label_path = f"src/label_map_idx2label_{dataset}.json"
+	if not os.path.exists(label_path):
+		raise FileNotFoundError(f"Label map not found: {label_path}")
+	with open(label_path, "r", encoding="utf-8") as f:
+		return json.load(f)
 
 def read_video_frames(video_path, num_frames=16):
 	cap = cv2.VideoCapture(video_path)
+	if not cap.isOpened():
+		raise RuntimeError(f"Cannot open video file: {video_path}")
 	total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+	if total_frames == 0:
+		raise RuntimeError(f"Video contains no frames: {video_path}")
 
-	# Chọn chỉ num_frames phân bố đều trong video
 	frame_indices = np.linspace(0, total_frames - 1, num_frames).astype(int)
 	frames = []
 	for idx in range(total_frames):
@@ -25,10 +35,10 @@ def read_video_frames(video_path, num_frames=16):
 			frames.append(frame_rgb)
 	cap.release()
 
-	if len(frames) < num_frames:
-		# Nếu không đủ frame, lặp lại frame cuối
-		while len(frames) < num_frames:
-			frames.append(frames[-1])
+	if len(frames) == 0:
+		raise RuntimeError("No frames extracted from video.")
+	while len(frames) < num_frames:
+		frames.append(frames[-1])
 
 	return frames[:num_frames]
 
@@ -39,24 +49,24 @@ def load_model(model_path, input_size, hidden_size, num_layers, num_classes):
 	model.eval()
 	return model
 
-def inference(video_path, dataset, model_path):
-	# Parameters (should match training)
-	num_frames = 16
+def inference(dataset, video_path, model_path):
+	num_frames = 32
 	hidden_size = 256
 	num_layers = 2
-	num_classes = 11 if dataset == "ucf11" else 50  # Sửa nếu dùng UCF101, HMDB51
 
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-	# Step 1: Read video and extract frames
-	frames = read_video_frames(video_path, num_frames)
+	# Load label map and number of classes
+	label_map = load_label_map(dataset)
+	num_classes = len(label_map)
 
-	# Step 2: Transform frames
+	# Step 1: Read and process video
+	frames = read_video_frames(video_path, num_frames)
 	transform = preprocessingData()
 	transformed_frames = [transform(frame) for frame in frames]
 	frames_tensor = torch.stack(transformed_frames, dim=0).to(device)
 
-	# Step 3: Extract features using ResNet50
+	# Step 2: Extract features
 	resnet = models.resnet50(weights=ResNet50_Weights.DEFAULT).to(device)
 	resnet_feat = torch.nn.Sequential(*list(resnet.children())[:-1])
 	resnet.eval()
@@ -64,17 +74,18 @@ def inference(video_path, dataset, model_path):
 		features_tensor = resnet_feat(frames_tensor)
 	features = torch.flatten(features_tensor, start_dim=1).cpu().numpy()
 
-	# Step 4: Load trained model
+	# Step 3: Load model
 	input_size = features.shape[1]
 	model = load_model(model_path, input_size, hidden_size, num_layers, num_classes)
 
-	# Step 5: Inference
+	# Step 4: Predict
 	with torch.no_grad():
-		input_seq = torch.from_numpy(features).unsqueeze(0).float().to(device)  # (1, seq_len, feature_size)
+		input_seq = torch.from_numpy(features).unsqueeze(0).float().to(device)
 		outputs = model(input_seq)
 		predicted_class = torch.argmax(outputs, dim=1).item()
+		predicted_label = label_map[str(predicted_class)]
 
-	print(f"Predicted class index: {predicted_class}")
+	print(f"Predicted class index: {predicted_class} ({predicted_label})")
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Inference on a single video using trained HAR model")
@@ -83,4 +94,4 @@ if __name__ == "__main__":
 	parser.add_argument("model_path", type=str, help="Path to trained model (.pt)")
 	args = parser.parse_args()
 
-	inference(args.video_path, args.dataset.lower(), args.model_path)
+	inference(args.dataset.lower(), args.video_path, args.model_path)

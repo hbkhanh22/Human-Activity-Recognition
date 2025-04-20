@@ -4,7 +4,7 @@ import torch
 import os
 from torchvision import models
 import time
-
+import json
 
 def extract_features(samples, transform, dataset):
     print("Extracting features using ResNet50...")
@@ -15,12 +15,12 @@ def extract_features(samples, transform, dataset):
     resnet.eval()
 
     # Remove the last layer of the ResNet50 model to obtain the feature extractor
-    resnet_feat = torch.nn.Sequential(*list(resnet.children())[:-1])
+    resnet_feat = torch.nn.Sequential(*list(resnet.children())[:-1]).to(device)
     resnet_feat.eval()
 
     processed_samples = []
     for frames, label in samples:
-        transformed_frames = [transform(frame) for frame in frames]
+        transformed_frames = [transform(frame).to(device) for frame in frames]
         frames_tensor = torch.stack(transformed_frames, dim=0).to(device) 
         with torch.no_grad():
             features_tensor = resnet_feat(frames_tensor)  # Shape: (T, 2048, 1, 1)
@@ -84,6 +84,10 @@ def splittingData(samples, dataset):
     np.save(f'./features/{dataset}/val_labels.npy', val_labels)
     np.save(f'./features/{dataset}/test_features.npy', test_features)
     np.save(f'./features/{dataset}/test_labels.npy', test_labels)
+
+    idx2label = {i: label for i, label in enumerate(le.classes_)}
+    with open(f'./features/{dataset}/label_map_idx2label.json', 'w') as f:
+        json.dump(idx2label, f, indent=4)
 
     # Save the LabelEncoder for later use
     return le
