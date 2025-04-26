@@ -1,0 +1,3 @@
+Feature extraction time: 557.77 seconds
+Training time: 106.57 seconds
+Test Loss: 0.1782, Test Accuracy: 94.76%
